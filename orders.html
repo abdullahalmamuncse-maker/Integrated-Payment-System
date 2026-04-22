@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — Integrated Payment System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-container"></div>
+<div class="container" style="padding:40px 24px 60px;">
+  <div class="flex-between mb-16">
+    <h1 class="page-title">📦 My Orders</h1>
+  </div>
+  <div id="orders-wrap"></div>
+</div>
+
+<script src="js/db.js"></script><script src="js/auth.js"></script><script src="js/utils.js"></script>
+<script src="js/fx.js"></script><script src="js/commission.js"></script><script src="js/cart.js"></script>
+<script src="js/notifications.js"></script><script src="js/payment.js"></script>
+<script src="js/seed.js"></script><script src="js/nav.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const session = auth.getSession();
+  const wrap = document.getElementById('orders-wrap');
+
+  if (!session || session.role !== 'customer') {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔒</div><h3>Login Required</h3><p>Please login to view your orders</p><a href="account.html" class="btn btn-primary">Login</a></div>`;
+    return;
+  }
+
+  const orders = db.query('orders', o => o.customer_id === session.id)
+                   .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (!orders.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><h3>No orders yet</h3><p>Start shopping to see your orders here</p><a href="products.html" class="btn btn-primary">Shop Now</a></div>`;
+    return;
+  }
+
+  wrap.innerHTML = orders.map(order => {
+    const items = db.query('order_items', i => i.order_id === order.id);
+    const pay = db.findOne('payments', p => p.order_id === order.id);
+    const thumbs = items.slice(0,3).map(item => {
+      const p = db.find('products', item.product_id);
+      return p ? `<img src="images/${p.image}" class="order-thumb" title="${p.title}">` : '';
+    }).join('');
+
+    return `
+      <div class="order-card">
+        <div class="order-header">
+          <div>
+            <div class="order-id">Order #${order.id}</div>
+            <div style="font-size:12px;color:#64748b;">${utils.formatDateTime(order.created_at)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            ${utils.statusBadge(order.status)}
+            <strong style="color:#4f46e5;font-size:16px;">${utils.formatBDT(order.total_amount_bdt)}</strong>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;">${thumbs}</div>
+          <div style="font-size:13px;color:#64748b;">${items.length} item${items.length !== 1 ? 's' : ''}</div>
+          ${pay ? `<div style="font-size:12px;color:#10b981;">✅ ${pay.method} · ${pay.provider_transaction_id}</div>` : ''}
+        </div>
+        <hr style="border:none;height:1px;background:#e2e8f0;margin:12px 0;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="toggleDetails(${order.id})" class="btn btn-ghost btn-sm">View Details</button>
+        </div>
+        <div id="details-${order.id}" style="display:none;margin-top:12px;">
+          <table class="cart-table">
+            <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+            <tbody>
+              ${items.map(item => {
+                const p = db.find('products', item.product_id) || {};
+                return `<tr>
+                  <td style="display:flex;align-items:center;gap:10px;padding:10px;">
+                    ${p.image ? `<img src="images/${p.image}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">` : ''}
+                    <span>${p.title || 'Product #' + item.product_id}</span>
+                  </td>
+                  <td>${item.quantity}</td>
+                  <td>${utils.formatBDT(item.unit_price_bdt)}</td>
+                  <td><strong>${utils.formatBDT(item.subtotal_bdt)}</strong></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          ${pay ? `<div style="margin-top:12px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;color:#065f46;">
+            💳 Paid via ${pay.method} · Transaction: ${pay.provider_transaction_id} · ${utils.formatDate(pay.paid_at)}
+          </div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+});
+
+function toggleDetails(orderId) {
+  const el = document.getElementById('details-' + orderId);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

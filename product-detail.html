@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail — Integrated Payment System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-container"></div>
+<div class="container" style="padding-top:40px;padding-bottom:60px;">
+  <div id="product-wrap"></div>
+</div>
+
+<!-- Related Products -->
+<section style="background:#fff;padding:60px 0;">
+  <div class="container">
+    <div class="section-title"><h2>Related Products</h2></div>
+    <div class="grid-4" id="related-grid"></div>
+  </div>
+</section>
+
+<footer class="ips-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><h3>💳 Integrated Payment System</h3><p>Secure BDT payments.</p></div>
+    <div class="footer-col"><h4>Shop</h4><ul><li><a href="products.html">All Products</a></li></ul></div>
+    <div class="footer-col"><h4>Account</h4><ul><li><a href="account.html">Login</a></li></ul></div>
+    <div class="footer-col"><h4>Info</h4><ul><li>Returns</li><li>Contact</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2024 Integrated Payment System</div>
+</footer>
+
+<script src="js/db.js"></script><script src="js/auth.js"></script><script src="js/utils.js"></script>
+<script src="js/fx.js"></script><script src="js/commission.js"></script><script src="js/cart.js"></script>
+<script src="js/notifications.js"></script><script src="js/payment.js"></script>
+<script src="js/seed.js"></script><script src="js/nav.js"></script>
+<script>
+let mainImg = '';
+
+function addToCart() {
+  const qty = parseInt(document.getElementById('qty-input').value) || 1;
+  const size = document.getElementById('size-sel')?.value || '';
+  const pid = parseInt(utils.getParam('id'));
+  if (cart.add(pid, qty, size)) {
+    document.getElementById('add-btn').textContent = '✅ Added!';
+    setTimeout(() => { document.getElementById('add-btn').textContent = '🛒 Add to Cart'; }, 2000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const id = parseInt(utils.getParam('id'));
+  const product = db.find('products', id);
+  if (!product) { document.getElementById('product-wrap').innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><h3>Product not found</h3><a href="products.html" class="btn btn-primary">Back to Products</a></div>'; return; }
+
+  const supplier = db.find('suppliers', product.supplier_id);
+  const inv = db.findOne('inventory', r => r.product_id === id);
+  const available = inv ? (inv.stock_qty - (inv.reserved_qty || 0)) : product.stock_qty;
+  const comm = commission.getForSupplier(product.supplier_id);
+  const commFee = comm ? parseFloat((product.price_bdt * comm.percentage / 100 + comm.fixed_fee_bdt).toFixed(2)) : 0;
+  const gallery = ['product-1.jpg','product-2.jpg','product-3.jpg','product-4.jpg'].includes(product.image)
+    ? ['gallery-1.jpg','gallery-2.jpg','gallery-3.jpg','gallery-4.jpg']
+    : [product.image];
+  mainImg = gallery[0];
+
+  document.title = product.title + ' — Integrated Payment System';
+
+  const wrap = document.getElementById('product-wrap');
+  wrap.innerHTML = `
+    <div style="margin-bottom:12px;color:#64748b;font-size:14px;">
+      <a href="index.html" style="color:#4f46e5;">Home</a> / 
+      <a href="products.html" style="color:#4f46e5;">Products</a> / 
+      <a href="products.html?category=${product.category}" style="color:#4f46e5;">${product.category}</a> /
+      ${product.title}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;">
+      <div>
+        <div style="border-radius:12px;overflow:hidden;margin-bottom:12px;">
+          <img id="main-img" src="images/${gallery[0]}" style="width:100%;aspect-ratio:1;object-fit:cover;">
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          ${gallery.map(g => `<img src="images/${g}" onclick="setImg('${g}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;" class="thumb-img">`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#4f46e5;text-transform:uppercase;margin-bottom:8px;">${product.category}</div>
+        <h1 style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:8px;">${product.title}</h1>
+        <div style="font-size:14px;color:#64748b;margin-bottom:4px;">SKU: ${product.sku}</div>
+        <div style="margin:8px 0;color:#f59e0b;font-size:16px;">${utils.stars(product.rating)} <span style="color:#64748b;font-size:13px;">(${product.rating})</span></div>
+        <div style="font-size:32px;font-weight:800;color:#4f46e5;margin:16px 0 4px;">${utils.formatBDT(product.price_bdt)}</div>
+        <div style="font-size:14px;color:#64748b;">≈ ${utils.formatUSD(product.price_usd)} at 1 USD = ${fx.currentRate()} BDT</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px;">Commission: ${utils.formatBDT(commFee)} (${comm?.percentage || 0}% + ৳${comm?.fixed_fee_bdt || 0})</div>
+        <hr class="divider">
+        <p style="color:#475569;line-height:1.8;">${product.description}</p>
+        <hr class="divider">
+        <div style="margin-bottom:16px;">
+          <label class="form-label">Size</label>
+          <select id="size-sel" class="form-control" style="max-width:200px;">
+            <option value="">Select Size</option>
+            <option>XXL</option><option>XL</option><option>Large</option><option>Medium</option><option>Small</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label class="form-label">Quantity</label>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button onclick="changeQty(-1)" class="btn btn-ghost btn-sm">−</button>
+            <input id="qty-input" type="number" value="1" min="1" max="${available}" class="form-control" style="width:70px;text-align:center;">
+            <button onclick="changeQty(1)" class="btn btn-ghost btn-sm">+</button>
+            <span style="font-size:13px;color:${available < 5 ? '#ef4444' : '#10b981'};">
+              ${available < 1 ? 'Out of Stock' : available < 5 ? 'Only ' + available + ' left' : available + ' available'}
+            </span>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button id="add-btn" class="btn btn-primary btn-lg" onclick="addToCart()" ${available < 1 ? 'disabled' : ''}>🛒 Add to Cart</button>
+          <a href="cart.html" class="btn btn-accent btn-lg">Buy Now</a>
+        </div>
+        <div style="margin-top:24px;padding:16px;background:#f8fafc;border-radius:10px;font-size:13px;color:#64748b;">
+          <div style="margin-bottom:6px;">🏭 <strong>Supplier:</strong> ${supplier?.name || 'N/A'}</div>
+          <div style="margin-bottom:6px;">📦 <strong>Stock:</strong> ${available} units available</div>
+          <div>🔒 <strong>Secure Payment</strong> via Integrated Payment System</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Related products
+  const related = db.query('products', p => p.category === product.category && p.id !== id).slice(0, 4);
+  document.getElementById('related-grid').innerHTML = related.map(p => `
+    <a href="product-detail.html?id=${p.id}" class="product-card">
+      <div class="product-card-img"><img src="images/${p.image}" alt="${p.title}"></div>
+      <div class="product-card-body">
+        <div class="product-card-cat">${p.category}</div>
+        <div class="product-card-title">${p.title}</div>
+        <div class="product-card-price">${utils.formatBDT(p.price_bdt)}</div>
+      </div>
+    </a>`).join('') || '<p class="text-muted text-center">No related products</p>';
+});
+
+function setImg(src) {
+  document.getElementById('main-img').src = 'images/' + src;
+  document.querySelectorAll('.thumb-img').forEach(el => el.style.borderColor = el.src.includes(src) ? '#4f46e5' : 'transparent');
+}
+
+function changeQty(d) {
+  const inp = document.getElementById('qty-input');
+  const val = Math.max(1, parseInt(inp.value || 1) + d);
+  inp.value = val;
+}
+</script>
+</body>
+</html>

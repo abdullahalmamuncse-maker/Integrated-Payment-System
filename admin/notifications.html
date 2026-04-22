@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Notifications — Admin | IPS</title><link rel="stylesheet" href="../css/admin.css"></head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand"><a href="index.html"><span>💳</span><div><div>IPS Admin</div><small>Integrated Payment System</small></div></a></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-link"><span class="sidebar-link-icon">📊</span> Dashboard</a>
+      <a href="orders.html" class="sidebar-link"><span class="sidebar-link-icon">📦</span> Orders</a>
+      <a href="products.html" class="sidebar-link"><span class="sidebar-link-icon">🛍️</span> Products</a>
+      <a href="customers.html" class="sidebar-link"><span class="sidebar-link-icon">👥</span> Customers</a>
+      <a href="suppliers.html" class="sidebar-link"><span class="sidebar-link-icon">🏭</span> Suppliers</a>
+      <a href="fx-rates.html" class="sidebar-link"><span class="sidebar-link-icon">💱</span> FX Rates</a>
+      <a href="commissions.html" class="sidebar-link"><span class="sidebar-link-icon">💰</span> Commissions</a>
+      <a href="inventory.html" class="sidebar-link"><span class="sidebar-link-icon">📋</span> Inventory</a>
+      <a href="notifications.html" class="sidebar-link active"><span class="sidebar-link-icon">🔔</span> Notifications</a>
+      <a href="sync-logs.html" class="sidebar-link"><span class="sidebar-link-icon">🔄</span> Sync Logs</a>
+      <a href="../index.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span> View Store</a>
+    </nav>
+    <div class="sidebar-footer"><button onclick="auth.logout()" style="width:100%;background:rgba(239,68,68,.15);color:#f87171;border:none;padding:8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Logout</button></div>
+  </aside>
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="admin-header-title">Notifications Center</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✅ Mark All Read</button>
+        <button class="btn btn-primary" onclick="openSendModal()">✉️ Send Notification</button>
+      </div>
+    </header>
+    <div class="admin-content">
+      <!-- Send form panel -->
+      <div class="data-table-wrap" style="padding:24px;margin-bottom:24px;" id="send-panel" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:16px;color:#1e1b4b;">Send Manual Notification</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Recipient Type *</label>
+            <select id="f-type" class="form-control" onchange="updateRecipientList()">
+              <option value="customer">Customer</option>
+              <option value="supplier">Supplier</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Recipient *</label>
+            <select id="f-recipient" class="form-control"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message *</label>
+          <textarea id="f-msg" class="form-control" rows="3" placeholder="Enter notification message..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="sendManual()">✉️ Send</button>
+          <button class="btn btn-ghost" onclick="closeSendPanel()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Filter Row -->
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <select id="filter-type" class="form-control" style="max-width:180px;" onchange="renderTable()">
+          <option value="">All Recipients</option>
+          <option value="customer">Customers</option>
+          <option value="supplier">Suppliers</option>
+          <option value="admin">Admin</option>
+        </select>
+        <select id="filter-read" class="form-control" style="max-width:160px;" onchange="renderTable()">
+          <option value="">All Status</option>
+          <option value="unread">Unread</option>
+          <option value="read">Read</option>
+        </select>
+        <input id="filter-search" class="form-control" style="max-width:240px;" placeholder="🔍 Search message..." oninput="renderTable()">
+        <span id="notif-count" style="margin-left:auto;display:flex;align-items:center;font-size:13px;color:#64748b;"></span>
+      </div>
+
+      <!-- Notifications Table -->
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Type</th><th>Recipient</th><th>Message</th><th>Status</th><th>Sent At</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="notif-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Send Modal -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Send Notification</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Recipient Type *</label>
+        <select id="m-type" class="form-control" onchange="updateModalRecipients()">
+          <option value="customer">Customer</option>
+          <option value="supplier">Supplier</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Recipient *</label>
+        <select id="m-recipient" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message *</label>
+        <textarea id="m-msg" class="form-control" rows="4" placeholder="Enter notification message..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="sendFromModal()">✉️ Send Notification</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/db.js"></script><script src="../js/auth.js"></script><script src="../js/utils.js"></script>
+<script src="../js/fx.js"></script><script src="../js/commission.js"></script><script src="../js/notifications.js"></script>
+<script src="../js/payment.js"></script><script src="../js/cart.js"></script><script src="../js/seed.js"></script>
+<script>
+function getRecipientName(type, id) {
+  if (type === 'customer') { const c = db.find('customers', id); return c ? c.name : `Customer #${id}`; }
+  if (type === 'supplier') { const s = db.find('suppliers', id); return s ? s.name : `Supplier #${id}`; }
+  return 'Admin';
+}
+
+function renderTable() {
+  const typeF   = document.getElementById('filter-type').value;
+  const readF   = document.getElementById('filter-read').value;
+  const search  = document.getElementById('filter-search').value.toLowerCase();
+
+  let data = db.get('notifications').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (typeF)  data = data.filter(n => n.recipient_type === typeF);
+  if (readF === 'unread') data = data.filter(n => !n.read_at);
+  if (readF === 'read')   data = data.filter(n => !!n.read_at);
+  if (search) data = data.filter(n => n.message.toLowerCase().includes(search));
+
+  document.getElementById('notif-count').textContent = `${data.length} notification(s)`;
+
+  const typeIcon = { customer:'👤', supplier:'🏭', admin:'🔑' };
+  const typeBadge = { customer:'badge-blue', supplier:'badge-green', admin:'badge-purple' };
+
+  document.getElementById('notif-table').innerHTML = data.length
+    ? data.map(n => `<tr style="${n.read_at ? '' : 'background:#fafafa;font-weight:500;'}">
+        <td>${n.id}</td>
+        <td><span class="badge ${typeBadge[n.recipient_type] || ''}">${typeIcon[n.recipient_type] || ''} ${n.recipient_type}</span></td>
+        <td>${getRecipientName(n.recipient_type, n.recipient_id)}</td>
+        <td style="max-width:340px;white-space:normal;line-height:1.5;">${n.message}</td>
+        <td>${n.read_at
+          ? '<span class="badge badge-success">Read</span>'
+          : '<span class="badge badge-warning">Unread</span>'}</td>
+        <td style="white-space:nowrap;">${utils.formatDateTime(n.created_at)}</td>
+        <td class="table-actions">
+          ${!n.read_at ? `<button class="btn btn-ghost btn-xs" onclick="markRead(${n.id})">✅ Read</button>` : ''}
+          <button class="btn btn-danger btn-xs" onclick="deleteNotif(${n.id})">🗑</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">No notifications</td></tr>';
+}
+
+function markRead(id) {
+  db.update('notifications', id, { read_at: new Date().toISOString() });
+  renderTable();
+}
+
+function markAllRead() {
+  db.get('notifications').filter(n => !n.read_at).forEach(n => {
+    db.update('notifications', n.id, { read_at: new Date().toISOString() });
+  });
+  utils.toast('All notifications marked as read', 'success');
+  renderTable();
+}
+
+function deleteNotif(id) {
+  if (!utils.confirm('Delete this notification?')) return;
+  db.delete('notifications', id);
+  renderTable();
+}
+
+function updateModalRecipients() {
+  const type = document.getElementById('m-type').value;
+  const sel  = document.getElementById('m-recipient');
+  sel.innerHTML = '';
+  let records = [];
+  if (type === 'customer') records = db.get('customers').map(c => ({ id: c.id, label: c.name }));
+  if (type === 'supplier') records = db.get('suppliers').map(s => ({ id: s.id, label: s.name }));
+  if (type === 'admin')    records = [{ id: 1, label: 'Admin' }];
+  records.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.label; sel.appendChild(o); });
+}
+
+function openSendModal() {
+  document.getElementById('send-modal').classList.add('open');
+  updateModalRecipients();
+}
+
+function closeModal() {
+  document.getElementById('send-modal').classList.remove('open');
+  document.getElementById('m-msg').value = '';
+}
+
+function sendFromModal() {
+  const type      = document.getElementById('m-type').value;
+  const recipient = parseInt(document.getElementById('m-recipient').value);
+  const msg       = document.getElementById('m-msg').value.trim();
+  if (!msg) { utils.toast('Please enter a message', 'error'); return; }
+  notifications.send('manual', type, recipient, msg);
+  utils.toast('Notification sent!', 'success');
+  closeModal();
+  renderTable();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  seedDatabase();
+  if (!auth.requireRole('admin')) return;
+  renderTable();
+});
+</script>
+</body></html>

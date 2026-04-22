@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrated Payment System — Home</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-container"></div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <div>
+      <span class="hero-tag">🔒 Secure · Fast · Reliable</span>
+      <h1>Your Trusted<br><span>Integrated Payment</span><br>Platform</h1>
+      <p>Shop premium products with seamless BDT payments, real-time FX rates, and complete order transparency.</p>
+      <div class="hero-btns">
+        <a href="products.html" class="btn btn-accent btn-lg">Shop Now →</a>
+        <a href="account.html" class="btn btn-outline btn-lg" style="border-color:#818cf8;color:#818cf8;">Get Started</a>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src="images/image1.png" alt="Integrated Payment System">
+    </div>
+  </div>
+</section>
+
+<!-- Stats bar -->
+<section style="background:#fff;border-bottom:1px solid #e2e8f0;padding:24px 0;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:24px;text-align:center;">
+      <div><div style="font-size:28px;font-weight:800;color:#4f46e5;" id="stat-products">12</div><div style="font-size:13px;color:#64748b;">Products</div></div>
+      <div><div style="font-size:28px;font-weight:800;color:#10b981;" id="stat-orders">0</div><div style="font-size:13px;color:#64748b;">Orders Placed</div></div>
+      <div><div style="font-size:28px;font-weight:800;color:#f59e0b;" id="stat-suppliers">2</div><div style="font-size:13px;color:#64748b;">Suppliers</div></div>
+      <div><div style="font-size:28px;font-weight:800;color:#8b5cf6;">110</div><div style="font-size:13px;color:#64748b;">BDT per USD</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="page-section">
+  <div class="container">
+    <div class="section-title"><h2>Shop by Category</h2><p>Explore our curated product categories</p></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;" id="categories-grid"></div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="page-section" style="background:#fff;padding:60px 0;">
+  <div class="container">
+    <div class="section-title"><h2>Featured Products</h2><p>Handpicked items just for you</p></div>
+    <div class="grid-4" id="featured-grid"></div>
+    <div class="text-center mt-32">
+      <a href="products.html" class="btn btn-outline btn-lg">View All Products →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Offer Banner -->
+<section style="background:linear-gradient(135deg,#1e1b4b,#312e81);padding:60px 0;color:#fff;">
+  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+    <div>
+      <img src="images/exclusive.png" alt="Exclusive" style="max-height:280px;margin:auto;">
+    </div>
+    <div>
+      <span style="background:rgba(245,158,11,.2);color:#f59e0b;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid rgba(245,158,11,.3);">Exclusively Available</span>
+      <h2 style="font-size:36px;font-weight:800;margin:16px 0;">Smart Band 4</h2>
+      <p style="color:#94a3b8;margin-bottom:24px;">The ultimate fitness tracker with AMOLED display, adjustable brightness and full-touch controls.</p>
+      <a href="products.html" class="btn btn-accent btn-lg">Buy Now →</a>
+    </div>
+  </div>
+</section>
+
+<!-- Brands -->
+<section class="page-section">
+  <div class="container">
+    <div class="section-title"><h2>Our Brand Partners</h2></div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;align-items:center;filter:grayscale(1);opacity:.6;">
+      <img src="images/logo-godrej.png" style="height:40px;">
+      <img src="images/logo-oppo.png" style="height:40px;">
+      <img src="images/logo-coca-cola.png" style="height:40px;">
+      <img src="images/logo-paypal.png" style="height:40px;">
+      <img src="images/logo-philips.png" style="height:40px;">
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="ips-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <h3>💳 Integrated Payment System</h3>
+      <p>A secure, multi-supplier eCommerce platform with real-time BDT pricing, FX integration, and transparent commission management.</p>
+    </div>
+    <div class="footer-col"><h4>Quick Links</h4><ul><li><a href="products.html">Products</a></li><li><a href="orders.html">My Orders</a></li><li><a href="account.html">Account</a></li></ul></div>
+    <div class="footer-col"><h4>Admin</h4><ul><li><a href="admin/index.html">Dashboard</a></li><li><a href="admin/fx-rates.html">FX Rates</a></li><li><a href="admin/commissions.html">Commissions</a></li></ul></div>
+    <div class="footer-col"><h4>Support</h4><ul><li>FAQ</li><li>Return Policy</li><li>Contact Us</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2024 Integrated Payment System. All rights reserved.</div>
+</footer>
+
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/commission.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/payment.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/nav.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Stats
+  document.getElementById('stat-orders').textContent = db.count('orders');
+  document.getElementById('stat-products').textContent = db.count('products');
+  document.getElementById('stat-suppliers').textContent = db.count('suppliers');
+
+  // Categories
+  const products = db.get('products');
+  const cats = [...new Set(products.map(p => p.category))];
+  const catImgs = { Tops:'product-1.jpg', Footwear:'product-3.jpg', Bottoms:'product-5.jpg', Dresses:'product-6.jpg', Outerwear:'product-7.jpg', Activewear:'product-12.jpg' };
+  const cGrid = document.getElementById('categories-grid');
+  cats.forEach(cat => {
+    const img = catImgs[cat] || 'product-1.jpg';
+    cGrid.innerHTML += `
+      <a href="products.html?category=${encodeURIComponent(cat)}" style="border-radius:12px;overflow:hidden;position:relative;display:block;aspect-ratio:1;">
+        <img src="images/${img}" style="width:100%;height:100%;object-fit:cover;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);display:flex;align-items:flex-end;padding:16px;">
+          <span style="color:#fff;font-weight:700;font-size:16px;">${cat}</span>
+        </div>
+      </a>`;
+  });
+
+  // Featured products (first 4)
+  const fGrid = document.getElementById('featured-grid');
+  const fxRate = fx.currentRate();
+  products.slice(0, 4).forEach(p => {
+    fGrid.innerHTML += `
+      <a href="product-detail.html?id=${p.id}" class="product-card">
+        <div class="product-card-img"><img src="images/${p.image}" alt="${p.title}"></div>
+        <div class="product-card-body">
+          <div class="product-card-cat">${p.category}</div>
+          <div class="product-card-title">${p.title}</div>
+          <div class="product-card-stars">${utils.stars(p.rating)} <span style="color:#64748b;font-size:12px;">(${p.rating})</span></div>
+          <div class="product-card-price">${utils.formatBDT(p.price_bdt)}</div>
+          <div class="product-card-usd">≈ ${utils.formatUSD(p.price_usd)}</div>
+        </div>
+        <div class="product-card-footer">
+          <span class="btn btn-primary btn-sm btn-full">View Details</span>
+        </div>
+      </a>`;
+  });
+
+  // Update cart badge
+  if (auth.getSession()?.role === 'customer') cart._updateBadge();
+});
+</script>
+</body>
+</html>

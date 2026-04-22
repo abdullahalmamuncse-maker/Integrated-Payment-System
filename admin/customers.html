@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Customers — Admin | IPS</title><link rel="stylesheet" href="../css/admin.css"></head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand"><a href="index.html"><span>💳</span><div><div>IPS Admin</div><small>Integrated Payment System</small></div></a></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-link"><span class="sidebar-link-icon">📊</span> Dashboard</a>
+      <a href="orders.html" class="sidebar-link"><span class="sidebar-link-icon">📦</span> Orders</a>
+      <a href="products.html" class="sidebar-link"><span class="sidebar-link-icon">🛍️</span> Products</a>
+      <a href="customers.html" class="sidebar-link active"><span class="sidebar-link-icon">👥</span> Customers</a>
+      <a href="suppliers.html" class="sidebar-link"><span class="sidebar-link-icon">🏭</span> Suppliers</a>
+      <a href="fx-rates.html" class="sidebar-link"><span class="sidebar-link-icon">💱</span> FX Rates</a>
+      <a href="commissions.html" class="sidebar-link"><span class="sidebar-link-icon">💰</span> Commissions</a>
+      <a href="inventory.html" class="sidebar-link"><span class="sidebar-link-icon">📋</span> Inventory</a>
+      <a href="notifications.html" class="sidebar-link"><span class="sidebar-link-icon">🔔</span> Notifications</a>
+      <a href="sync-logs.html" class="sidebar-link"><span class="sidebar-link-icon">🔄</span> Sync Logs</a>
+      <a href="../index.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span> View Store</a>
+    </nav>
+    <div class="sidebar-footer"><button onclick="auth.logout()" style="width:100%;background:rgba(239,68,68,.15);color:#f87171;border:none;padding:8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Logout</button></div>
+  </aside>
+  <main class="admin-main">
+    <header class="admin-header"><div class="admin-header-title">Customers</div></header>
+    <div class="admin-content">
+      <input id="search" class="search-input" style="width:300px;margin-bottom:16px;" placeholder="🔍 Search customers..." oninput="render()">
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Joined</th></tr></thead>
+          <tbody id="cust-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="../js/db.js"></script><script src="../js/auth.js"></script><script src="../js/utils.js"></script>
+<script src="../js/fx.js"></script><script src="../js/commission.js"></script><script src="../js/notifications.js"></script>
+<script src="../js/payment.js"></script><script src="../js/cart.js"></script><script src="../js/seed.js"></script>
+<script>
+function render() {
+  const s = document.getElementById('search').value.toLowerCase();
+  let custs = db.get('customers');
+  if (s) custs = custs.filter(c => c.name.toLowerCase().includes(s) || c.email.toLowerCase().includes(s));
+  document.getElementById('cust-table').innerHTML = custs.map(c => {
+    const orders = db.query('orders', o => o.customer_id === c.id);
+    const spent  = orders.reduce((sum, o) => sum + parseFloat(o.total_amount_bdt||0), 0);
+    return `<tr>
+      <td>${c.id}</td>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.email}</td>
+      <td>${c.phone || '—'}</td>
+      <td><strong>${orders.length}</strong></td>
+      <td><strong style="color:#4f46e5;">${utils.formatBDT(spent)}</strong></td>
+      <td>${utils.formatDate(c.created_at)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">No customers yet</td></tr>';
+}
+document.addEventListener('DOMContentLoaded', () => { seedDatabase(); if (!auth.requireRole('admin')) return; render(); });
+</script>
+</body></html>

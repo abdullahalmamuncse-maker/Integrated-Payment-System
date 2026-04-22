@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products — Integrated Payment System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav-container"></div>
+<div class="container">
+  <div class="page-header flex-between flex-wrap gap-16">
+    <div><h1 class="page-title">All Products</h1><p class="page-sub">Showing <span id="count-label">12</span> products</p></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <input type="text" id="search-box" class="form-control" placeholder="🔍 Search products..." style="width:220px;">
+      <select id="sort-sel" class="form-control" style="width:180px;">
+        <option value="">Default Sort</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="rating">Top Rated</option>
+        <option value="name">Name A→Z</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Category filter -->
+  <div class="category-bar" id="cat-bar"></div>
+
+  <!-- Product Grid -->
+  <div class="grid-4" id="product-grid"></div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <div class="empty-state-icon">🔍</div>
+    <h3>No products found</h3>
+    <p>Try a different search or category</p>
+    <button class="btn btn-primary" onclick="resetFilters()">Reset Filters</button>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<footer class="ips-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><h3>💳 Integrated Payment System</h3><p>Secure multi-supplier eCommerce with BDT pricing.</p></div>
+    <div class="footer-col"><h4>Shop</h4><ul><li><a href="products.html">All Products</a></li><li><a href="cart.html">Cart</a></li></ul></div>
+    <div class="footer-col"><h4>Account</h4><ul><li><a href="account.html">Login</a></li><li><a href="orders.html">Orders</a></li></ul></div>
+    <div class="footer-col"><h4>Info</h4><ul><li>Return Policy</li><li>Contact</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2024 Integrated Payment System</div>
+</footer>
+
+<script src="js/db.js"></script><script src="js/auth.js"></script><script src="js/utils.js"></script>
+<script src="js/fx.js"></script><script src="js/commission.js"></script><script src="js/cart.js"></script>
+<script src="js/notifications.js"></script><script src="js/payment.js"></script>
+<script src="js/seed.js"></script><script src="js/nav.js"></script>
+<script>
+const PAGE_SIZE = 8;
+let currentPage = 1, activeCategory = '', searchTerm = '', sortMode = '';
+
+function getFiltered() {
+  let products = db.get('products');
+  if (activeCategory) products = products.filter(p => p.category === activeCategory);
+  if (searchTerm) {
+    const s = searchTerm.toLowerCase();
+    products = products.filter(p => p.title.toLowerCase().includes(s) || p.category.toLowerCase().includes(s));
+  }
+  if (sortMode === 'price-asc')  products.sort((a,b) => a.price_bdt - b.price_bdt);
+  if (sortMode === 'price-desc') products.sort((a,b) => b.price_bdt - a.price_bdt);
+  if (sortMode === 'rating')     products.sort((a,b) => b.rating - a.rating);
+  if (sortMode === 'name')       products.sort((a,b) => a.title.localeCompare(b.title));
+  return products;
+}
+
+function renderProducts() {
+  const all = getFiltered();
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = all.slice(start, start + PAGE_SIZE);
+  const grid = document.getElementById('product-grid');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('count-label').textContent = all.length;
+
+  if (!all.length) { grid.innerHTML = ''; empty.style.display = 'block'; renderPagination(0); return; }
+  empty.style.display = 'none';
+
+  grid.innerHTML = page.map(p => `
+    <a href="product-detail.html?id=${p.id}" class="product-card">
+      <div class="product-card-img"><img src="images/${p.image}" alt="${p.title}" loading="lazy"></div>
+      <div class="product-card-body">
+        <div class="product-card-cat">${p.category}</div>
+        <div class="product-card-title">${p.title}</div>
+        <div class="product-card-stars">${utils.stars(p.rating)} <span style="color:#64748b;font-size:12px;">${p.rating}</span></div>
+        <div class="product-card-price">${utils.formatBDT(p.price_bdt)}</div>
+        <div class="product-card-usd">≈ ${utils.formatUSD(p.price_usd)}</div>
+        <div style="font-size:12px;color:${p.stock_qty < 5 ? '#ef4444' : '#10b981'};margin-top:4px;">
+          ${p.stock_qty < 1 ? '❌ Out of Stock' : p.stock_qty < 5 ? `⚠️ Only ${p.stock_qty} left` : '✅ In Stock'}
+        </div>
+      </div>
+      <div class="product-card-footer">
+        <span class="btn btn-primary btn-sm btn-full">View Details</span>
+      </div>
+    </a>`).join('');
+  renderPagination(all.length);
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= pages; i++) {
+    html += `<button class="page-btn-num${i === currentPage ? ' active' : ''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  el.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; renderProducts(); window.scrollTo(0,0); }
+
+function resetFilters() {
+  activeCategory = ''; searchTerm = ''; sortMode = ''; currentPage = 1;
+  document.getElementById('search-box').value = '';
+  document.getElementById('sort-sel').value = '';
+  document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+  renderProducts();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Category pills
+  const cats = ['All', ...new Set(db.get('products').map(p => p.category))];
+  const catBar = document.getElementById('cat-bar');
+  cats.forEach(cat => {
+    const pill = document.createElement('button');
+    pill.className = 'cat-pill' + (cat === 'All' ? ' active' : '');
+    pill.textContent = cat;
+    pill.onclick = () => {
+      activeCategory = cat === 'All' ? '' : cat;
+      currentPage = 1;
+      document.querySelectorAll('.cat-pill').forEach(el => el.classList.remove('active'));
+      pill.classList.add('active');
+      renderProducts();
+    };
+    catBar.appendChild(pill);
+  });
+
+  // URL params
+  const catParam = utils.getParam('category');
+  if (catParam) {
+    activeCategory = catParam;
+    document.querySelectorAll('.cat-pill').forEach(el => {
+      if (el.textContent === catParam) el.classList.add('active');
+      else el.classList.remove('active');
+    });
+  }
+
+  // Search & sort
+  let searchTimer;
+  document.getElementById('search-box').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { searchTerm = e.target.value; currentPage = 1; renderProducts(); }, 300);
+  });
+  document.getElementById('sort-sel').addEventListener('change', e => { sortMode = e.target.value; currentPage = 1; renderProducts(); });
+
+  renderProducts();
+});
+</script>
+</body>
+</html>

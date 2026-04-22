@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Suppliers — Admin | IPS</title><link rel="stylesheet" href="../css/admin.css"></head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand"><a href="index.html"><span>💳</span><div><div>IPS Admin</div><small>Integrated Payment System</small></div></a></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-link"><span class="sidebar-link-icon">📊</span> Dashboard</a>
+      <a href="orders.html" class="sidebar-link"><span class="sidebar-link-icon">📦</span> Orders</a>
+      <a href="products.html" class="sidebar-link"><span class="sidebar-link-icon">🛍️</span> Products</a>
+      <a href="customers.html" class="sidebar-link"><span class="sidebar-link-icon">👥</span> Customers</a>
+      <a href="suppliers.html" class="sidebar-link active"><span class="sidebar-link-icon">🏭</span> Suppliers</a>
+      <a href="fx-rates.html" class="sidebar-link"><span class="sidebar-link-icon">💱</span> FX Rates</a>
+      <a href="commissions.html" class="sidebar-link"><span class="sidebar-link-icon">💰</span> Commissions</a>
+      <a href="inventory.html" class="sidebar-link"><span class="sidebar-link-icon">📋</span> Inventory</a>
+      <a href="notifications.html" class="sidebar-link"><span class="sidebar-link-icon">🔔</span> Notifications</a>
+      <a href="sync-logs.html" class="sidebar-link"><span class="sidebar-link-icon">🔄</span> Sync Logs</a>
+      <a href="../index.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span> View Store</a>
+    </nav>
+    <div class="sidebar-footer"><button onclick="auth.logout()" style="width:100%;background:rgba(239,68,68,.15);color:#f87171;border:none;padding:8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Logout</button></div>
+  </aside>
+  <main class="admin-main">
+    <header class="admin-header">
+      <div class="admin-header-title">Supplier Management</div>
+      <button class="btn btn-primary" onclick="openModal()">+ Add Supplier</button>
+    </header>
+    <div class="admin-content">
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Vendor Code</th><th>API Endpoint</th><th>Products</th><th>Actions</th></tr></thead>
+          <tbody id="sup-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Add Supplier</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group"><label class="form-label">Name *</label><input id="f-name" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Contact Email *</label><input id="f-email" class="form-control" type="email"></div>
+      <div class="form-group"><label class="form-label">Login Password *</label><input id="f-pass" class="form-control" type="password" placeholder="Min 6 chars"></div>
+      <div class="form-group"><label class="form-label">API Endpoint</label><input id="f-api" class="form-control" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Vendor Code</label><input id="f-code" class="form-control" placeholder="Auto-generated if empty"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Save</button>
+    </div>
+  </div>
+</div>
+<script src="../js/db.js"></script><script src="../js/auth.js"></script><script src="../js/utils.js"></script>
+<script src="../js/fx.js"></script><script src="../js/commission.js"></script><script src="../js/notifications.js"></script>
+<script src="../js/payment.js"></script><script src="../js/cart.js"></script><script src="../js/seed.js"></script>
+<script>
+let editingId = null;
+function render() {
+  document.getElementById('sup-table').innerHTML = db.get('suppliers').map(s => {
+    const prodCount = db.count('products', p => p.supplier_id === s.id);
+    return `<tr>
+      <td>${s.id}</td><td><strong>${s.name}</strong></td>
+      <td>${s.contact_email}</td><td style="font-family:monospace;">${s.vendor_code}</td>
+      <td style="font-size:12px;color:#64748b;">${s.api_endpoint || '—'}</td>
+      <td>${prodCount}</td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-xs" onclick="editSup(${s.id})">✏️ Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteSup(${s.id})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;">No suppliers</td></tr>';
+}
+
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modal-title').textContent = id ? 'Edit Supplier' : 'Add Supplier';
+  ['f-name','f-email','f-pass','f-api','f-code'].forEach(fid => document.getElementById(fid).value = '');
+  if (id) {
+    const s = db.find('suppliers', id);
+    if (!s) return;
+    document.getElementById('f-name').value  = s.name;
+    document.getElementById('f-email').value = s.contact_email;
+    document.getElementById('f-api').value   = s.api_endpoint || '';
+    document.getElementById('f-code').value  = s.vendor_code || '';
+  }
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function saveSupplier() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const pass  = document.getElementById('f-pass').value;
+  if (!name || !email) { utils.toast('Name and email required', 'error'); return; }
+
+  const data = { name, contact_email: email, api_endpoint: document.getElementById('f-api').value, vendor_code: document.getElementById('f-code').value || utils.generateSKU('VND') };
+  if (pass) data.password_hash = auth._hash(pass);
+
+  if (editingId) { db.update('suppliers', editingId, data); utils.toast('Supplier updated', 'success'); }
+  else { db.insert('suppliers', data); utils.toast('Supplier added', 'success'); }
+  closeModal(); render();
+}
+
+function editSup(id)   { openModal(id); }
+function deleteSup(id) { if (!utils.confirm('Delete this supplier?')) return; db.delete('suppliers', id); utils.toast('Deleted', 'info'); render(); }
+
+document.addEventListener('DOMContentLoaded', () => { seedDatabase(); if (!auth.requireRole('admin')) return; render(); });
+</script>
+</body></html>
