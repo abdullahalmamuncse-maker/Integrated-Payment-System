@@ -1,4 +1,0 @@
-/* Supplier Portal Stylesheet - reuses admin base */
-@import url('../css/admin.css');
-.admin-sidebar{background:#064e3b;}.sidebar-brand small{color:#6ee7b7;}.sidebar-link.active{background:#065f46;}
-.stat-card{border-color:#10b981;}.stat-card.green{border-color:#10b981;}.stat-card.blue{border-color:#3b82f6;}
